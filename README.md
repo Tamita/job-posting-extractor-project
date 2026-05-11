@@ -13,6 +13,7 @@ For this process I'll use the next convention: branch-scope/descriptio-name
     test: add test cases
 
 Poetry: Manage the Python project dependencies, virtual environment, and packaging in one place.
+Make: Manage scripts, define commands for common tasks.
 
 Development Dependencies for code quality, test code, keep style consistent, and catch bugs early:
 pytest : runs automated tests. You write test files, and  pytest  discovers and executes them to verify your ETL code works as expected.
