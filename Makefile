@@ -20,10 +20,10 @@ check: ## Validate pyproject.toml and dependency definitions
 	$(POETRY) check
 
 format: ## Format source code and tests with black
-	$(CMD) black $(SRC) $(TESTS)
+	$(CMD) black $(SRC) $(TESTS) --target-version py313 .
 
 format-check: ## Check formatting without modifying files
-	$(CMD) black --check $(SRC) $(TESTS)
+	$(CMD) black --check $(SRC) $(TESTS) --target-version py313 .
 
 lint: ## Run ruff on source code and tests
 	$(CMD) ruff check $(SRC) $(TESTS)
