@@ -1,3 +1,4 @@
+import pytest
 import pandas as pd
 
 from src.main import main
@@ -52,3 +53,38 @@ def test_main_runs_full_pipeline(monkeypatch):
         "validate_raw_jobs_dataframe",
         "load_jobs_to_postgres",
     ]
+
+
+def test_main_raises_when_validation_fails(monkeypatch):
+    raw_df = pd.DataFrame({"job_title": ["Data Engineer"]})
+    parsed_df = pd.DataFrame({"job_title": ["Data Engineer"]})
+
+    def fake_setup_logging():
+        pass
+
+    def fake_read_raw_jobs_csv():
+        return raw_df
+
+    def fake_parse_semi_structured_columns(df):
+        return parsed_df
+
+    def fake_validate_raw_jobs_dataframe(df):
+        raise ValueError("Invalid dataframe")
+
+    def fake_load_jobs_to_postgres(df):
+        raise AssertionError("load_jobs_to_postgres should not be called")
+
+    monkeypatch.setattr("src.main.setup_logging", fake_setup_logging)
+    monkeypatch.setattr("src.main.read_raw_jobs_csv", fake_read_raw_jobs_csv)
+    monkeypatch.setattr(
+        "src.main.parse_semi_structured_columns",
+        fake_parse_semi_structured_columns,
+    )
+    monkeypatch.setattr(
+        "src.main.validate_raw_jobs_dataframe",
+        fake_validate_raw_jobs_dataframe,
+    )
+    monkeypatch.setattr("src.main.load_jobs_to_postgres", fake_load_jobs_to_postgres)
+
+    with pytest.raises(ValueError, match="Invalid dataframe"):
+        main()
