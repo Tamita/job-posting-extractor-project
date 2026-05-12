@@ -12,12 +12,13 @@ def test_load_jobs_to_postgres_calls_to_sql(monkeypatch):
     def fake_create_postgres_engine():
         return FakeEngine()
 
-    def fake_to_sql(self, name, con, schema, if_exists, index):
+    def fake_to_sql(self, name, con, schema, if_exists, index, **kwargs):
         captured["name"] = name
         captured["con"] = con
         captured["schema"] = schema
         captured["if_exists"] = if_exists
         captured["index"] = index
+        captured["dtype"] = kwargs.get("dtype")
 
     monkeypatch.setattr(
         "src.load.data_loader.create_postgres_engine",
@@ -39,3 +40,5 @@ def test_load_jobs_to_postgres_calls_to_sql(monkeypatch):
     assert captured["if_exists"] == "replace"
     assert captured["index"] is False
     assert isinstance(captured["con"], FakeEngine)
+    assert "job_skills" in captured["dtype"]
+    assert "job_type_skills" in captured["dtype"]

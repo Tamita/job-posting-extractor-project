@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+from sqlalchemy import JSON
 
 from src.config.settings import POSTGRES_SCHEMA, POSTGRES_TABLE
 from src.load.db_connector import create_postgres_engine
@@ -24,6 +25,10 @@ def load_jobs_to_postgres(df: pd.DataFrame) -> None:
             schema=POSTGRES_SCHEMA,
             if_exists="replace",
             index=False,
+            dtype={
+                "job_skills": JSON,
+                "job_type_skills": JSON,
+            },
         )
 
         logger.info(
