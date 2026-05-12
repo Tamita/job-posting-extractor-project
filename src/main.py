@@ -11,26 +11,14 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     setup_logging()
-    logger.info("Application started")
+    logger.info("Starting jobs ETL pipeline")
 
-    try:
-        df = read_raw_jobs_csv()
-        parsed_df = parse_semi_structured_columns(df)
-        validated_df = validate_raw_jobs_dataframe(parsed_df)
+    raw_df = read_raw_jobs_csv()
+    parsed_df = parse_semi_structured_columns(raw_df)
+    validated_df = validate_raw_jobs_dataframe(parsed_df)
+    load_jobs_to_postgres(validated_df)
 
-        if validated_df.empty:
-            logger.warning("Application completed with an empty dataset")
-            return
-
-        load_jobs_to_postgres(validated_df)
-
-        logger.info(
-            "Application execution finished successfully with %s records",
-            len(validated_df),
-        )
-    except Exception:
-        logger.exception("Application execution failed")
-        raise
+    logger.info("Jobs ETL pipeline completed successfully")
 
 
 if __name__ == "__main__":
