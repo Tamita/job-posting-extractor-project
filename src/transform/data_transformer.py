@@ -42,6 +42,7 @@ def parse_job_type_skills_value(value: Any) -> dict:
         logger.warning("Failed to parse job_type_skills value: %s", value)
         return {}
 
+
 def parse_semi_structured_columns(df: pd.DataFrame) -> pd.DataFrame:
     parsed_df = df.copy()
 

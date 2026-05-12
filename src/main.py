@@ -13,7 +13,7 @@ def main() -> None:
 
     try:
         df = read_raw_jobs_csv()
-        
+
         parsed_df = parse_semi_structured_columns(df)
 
         if parsed_df.empty:
