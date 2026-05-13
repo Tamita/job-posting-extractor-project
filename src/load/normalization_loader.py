@@ -123,10 +123,32 @@ def shorten_sql_for_log(sql_statement: str, max_length: int = 160) -> str:
     return f"{single_line[:max_length]}..."
 
 
+def _run_seed_step(*, sql_file_name: str, step_name: str, log_label: str) -> None:
+    logger.info("%s step started", log_label)
+
+    try:
+        sql_script = read_sql_file(sql_file_name)
+        execute_sql_script(sql_script, step_name=step_name)
+    except (OSError, SQLAlchemyError, ValueError) as exc:
+        logger.exception("%s step failed", log_label)
+        raise NormalizationExecutionError(
+            f"Failed to execute normalization step '{step_name}'"
+        ) from exc
+
+    logger.info("%s step finished", log_label)
+
+
 def seed_locations() -> None:
-    logger.info("Locations seed step started")
+    _run_seed_step(
+        sql_file_name="normalized_seed_locations.sql",
+        step_name="seed_locations",
+        log_label="Locations seed",
+    )
 
-    sql_script = read_sql_file("normalized_seed_locations.sql")
-    execute_sql_script(sql_script, step_name="seed_locations")
 
-    logger.info("Locations seed step finished")
+def seed_companies() -> None:
+    _run_seed_step(
+        sql_file_name="normalized_seed_companies.sql",
+        step_name="seed_companies",
+        log_label="Companies seed",
+    )
