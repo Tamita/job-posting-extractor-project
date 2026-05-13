@@ -144,11 +144,3 @@ def seed_locations() -> None:
         step_name="seed_locations",
         log_label="Locations seed",
     )
-
-
-def seed_companies() -> None:
-    _run_seed_step(
-        sql_file_name="normalized_seed_companies.sql",
-        step_name="seed_companies",
-        log_label="Companies seed",
-    )

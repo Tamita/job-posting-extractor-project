@@ -10,7 +10,6 @@ from src.load.normalization_loader import (
     create_normalized_schema,
     seed_reference_entities,
     seed_locations,
-    seed_companies,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,6 @@ def main() -> None:
     create_normalized_schema()
     seed_reference_entities()
     seed_locations()
-    seed_companies()
 
     logger.info("Jobs ETL pipeline completed successfully")
 
