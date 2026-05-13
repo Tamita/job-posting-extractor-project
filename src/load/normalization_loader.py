@@ -1,4 +1,5 @@
 import logging
+from time import perf_counter
 from pathlib import Path
 
 from sqlalchemy import text
@@ -38,14 +39,51 @@ def execute_sql_script(sql_script: str, *, step_name: str) -> None:
     if not sql_script.strip():
         raise ValueError(f"SQL script for step '{step_name}' cannot be empty")
 
-    logger.info("Starting normalization step '%s'", step_name)
+    statements = split_sql_statements(sql_script)
+
+    if not statements:
+        raise ValueError(
+            f"SQL script for step '{step_name}' does not contain executable statements"
+        )
+
+    logger.info(
+        "Starting normalization step '%s' with %d SQL statements",
+        step_name,
+        len(statements),
+    )
 
     engine = create_postgres_engine()
 
     try:
         with engine.begin() as connection:
-            connection.execute(text(sql_script))
+            for index, statement in enumerate(statements, start=1):
+                statement_preview = shorten_sql_for_log(statement)
+                start_time = perf_counter()
+
+                logger.info(
+                    "Executing normalization step '%s' statement %d/%d: %s",
+                    step_name,
+                    index,
+                    len(statements),
+                    statement_preview,
+                )
+
+                connection.execute(text(statement))
+
+                elapsed = perf_counter() - start_time
+                logger.info(
+                    (
+                        "Finished normalization step '%s' statement %d/%d "
+                        "in %.2f seconds"
+                    ),
+                    step_name,
+                    index,
+                    len(statements),
+                    elapsed,
+                )
+
         logger.info("Finished normalization step '%s'", step_name)
+
     except SQLAlchemyError as exc:
         logger.exception("Normalization step '%s' failed", step_name)
         raise NormalizationExecutionError(
@@ -69,3 +107,17 @@ def seed_reference_entities() -> None:
     execute_sql_script(sql_script, step_name="seed_reference_entities")
 
     logger.info("Reference entities seed step finished")
+
+
+def split_sql_statements(sql_script: str) -> list[str]:
+    statements = [
+        statement.strip() for statement in sql_script.split(";") if statement.strip()
+    ]
+    return [f"{statement};" for statement in statements]
+
+
+def shorten_sql_for_log(sql_statement: str, max_length: int = 160) -> str:
+    single_line = " ".join(sql_statement.split())
+    if len(single_line) <= max_length:
+        return single_line
+    return f"{single_line[:max_length]}..."
