@@ -1,7 +1,7 @@
 import logging
 
 import pandas as pd
-from sqlalchemy import JSON, DateTime
+from sqlalchemy import JSON
 
 from src.config.settings import POSTGRES_SCHEMA, POSTGRES_TABLE
 from src.load.db_connector import create_postgres_engine
@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 def prepare_dataframe_for_postgres_load(df: pd.DataFrame) -> pd.DataFrame:
     prepared_df = df.copy()
+
+    prepared_df.insert(0, "raw_job_id", range(1, len(prepared_df) + 1))
 
     if "job_posted_date" in prepared_df.columns:
         prepared_df["job_posted_date"] = pd.to_datetime(
@@ -41,7 +43,6 @@ def load_jobs_to_postgres(df: pd.DataFrame) -> None:
             dtype={
                 "job_skills": JSON,
                 "job_type_skills": JSON,
-                "job_posted_date": DateTime(),
             },
         )
 

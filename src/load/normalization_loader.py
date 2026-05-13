@@ -152,3 +152,11 @@ def seed_skills() -> None:
         step_name="seed_skills",
         log_label="Skills seed",
     )
+
+
+def seed_jobs() -> None:
+    _run_seed_step(
+        sql_file_name="normalized_seed_jobs.sql",
+        step_name="seed_jobs",
+        log_label="Jobs seed",
+    )
