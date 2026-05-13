@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS locations (
     location_id SERIAL PRIMARY KEY,
-    raw_location TEXT NOT NULL,
+    raw_location TEXT UNIQUE,
     city TEXT,
     state TEXT,
     country TEXT
