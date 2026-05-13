@@ -1,12 +1,24 @@
 import logging
 
 import pandas as pd
-from sqlalchemy import JSON
+from sqlalchemy import JSON, DateTime
 
 from src.config.settings import POSTGRES_SCHEMA, POSTGRES_TABLE
 from src.load.db_connector import create_postgres_engine
 
 logger = logging.getLogger(__name__)
+
+
+def prepare_dataframe_for_postgres_load(df: pd.DataFrame) -> pd.DataFrame:
+    prepared_df = df.copy()
+
+    if "job_posted_date" in prepared_df.columns:
+        prepared_df["job_posted_date"] = pd.to_datetime(
+            prepared_df["job_posted_date"],
+            errors="coerce",
+        )
+
+    return prepared_df
 
 
 def load_jobs_to_postgres(df: pd.DataFrame) -> None:
@@ -17,9 +29,10 @@ def load_jobs_to_postgres(df: pd.DataFrame) -> None:
     )
 
     try:
+        prepared_df = prepare_dataframe_for_postgres_load(df)
         engine = create_postgres_engine()
 
-        df.to_sql(
+        prepared_df.to_sql(
             name=POSTGRES_TABLE,
             con=engine,
             schema=POSTGRES_SCHEMA,
@@ -28,6 +41,7 @@ def load_jobs_to_postgres(df: pd.DataFrame) -> None:
             dtype={
                 "job_skills": JSON,
                 "job_type_skills": JSON,
+                "job_posted_date": DateTime(),
             },
         )
 
