@@ -1,7 +1,17 @@
 INSERT INTO companies (company_name)
-SELECT DISTINCT NULLIF(BTRIM(company_name), '')
-FROM public.raw_jobs
-WHERE NULLIF(BTRIM(company_name), '') IS NOT NULL
+SELECT DISTINCT cleaned_company_name
+FROM (
+    SELECT NULLIF(
+        BTRIM(
+            TRANSLATE(company_name, CHR(34), '')
+        ),
+        ''
+    ) AS cleaned_company_name
+    FROM public.raw_jobs
+    WHERE company_name IS NOT NULL
+) companies_source
+WHERE cleaned_company_name IS NOT NULL
+  AND lower(cleaned_company_name) NOT IN ('unknown', 'n/a', 'na', 'null', '-')
 ON CONFLICT (company_name) DO NOTHING;
 
 INSERT INTO platforms (platform_name)
