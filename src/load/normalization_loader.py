@@ -121,3 +121,12 @@ def shorten_sql_for_log(sql_statement: str, max_length: int = 160) -> str:
     if len(single_line) <= max_length:
         return single_line
     return f"{single_line[:max_length]}..."
+
+
+def seed_locations() -> None:
+    logger.info("Locations seed step started")
+
+    sql_script = read_sql_file("normalized_seed_locations.sql")
+    execute_sql_script(sql_script, step_name="seed_locations")
+
+    logger.info("Locations seed step finished")

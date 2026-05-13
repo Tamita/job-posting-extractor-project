@@ -9,6 +9,7 @@ from src.load.db_bootstrap import ensure_database_exists
 from src.load.normalization_loader import (
     create_normalized_schema,
     seed_reference_entities,
+    seed_locations,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ def main() -> None:
     load_jobs_to_postgres(validated_df)
     create_normalized_schema()
     seed_reference_entities()
+    seed_locations()
 
     logger.info("Jobs ETL pipeline completed successfully")
 
