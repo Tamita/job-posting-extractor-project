@@ -38,8 +38,14 @@ CREATE TABLE IF NOT EXISTS skill_types (
 
 CREATE TABLE IF NOT EXISTS skills (
     skill_id SERIAL PRIMARY KEY,
-    skill_name TEXT NOT NULL UNIQUE,
-    skill_type_id INT REFERENCES skill_types(skill_type_id)
+    skill_name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS skill_type_skills (
+    skill_type_skill_id SERIAL PRIMARY KEY,
+    skill_id INT NOT NULL REFERENCES skills(skill_id),
+    skill_type_id INT REFERENCES skill_types(skill_type_id),
+    CONSTRAINT uq_skill_type_skills UNIQUE (skill_id, skill_type_id)
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -60,8 +66,8 @@ CREATE TABLE IF NOT EXISTS jobs (
     job_health_insurance BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS job_skills (
+CREATE TABLE IF NOT EXISTS job_skill_type_skills (
     job_id INT NOT NULL REFERENCES jobs(job_id),
-    skill_id INT NOT NULL REFERENCES skills(skill_id),
-    PRIMARY KEY (job_id, skill_id)
+    skill_type_skill_id INT NOT NULL REFERENCES skill_type_skills(skill_type_skill_id),
+    CONSTRAINT pk_job_skill_type_skills PRIMARY KEY (job_id, skill_type_skill_id)
 );
