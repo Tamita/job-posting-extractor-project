@@ -6,7 +6,10 @@ from src.transform.data_transformer import parse_semi_structured_columns
 from src.transform.raw_jobs_schema import validate_raw_jobs_dataframe
 from src.load.data_loader import load_jobs_to_postgres
 from src.load.db_bootstrap import ensure_database_exists
-from src.load.normalization_loader import create_normalized_schema
+from src.load.normalization_loader import (
+    create_normalized_schema,
+    seed_reference_entities,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,7 @@ def main() -> None:
     validated_df = validate_raw_jobs_dataframe(parsed_df)
     load_jobs_to_postgres(validated_df)
     create_normalized_schema()
+    seed_reference_entities()
 
     logger.info("Jobs ETL pipeline completed successfully")
 

@@ -60,3 +60,12 @@ def create_normalized_schema() -> None:
     execute_sql_script(sql_script, step_name="create_normalized_schema")
 
     logger.info("Normalized schema creation step finished")
+
+
+def seed_reference_entities() -> None:
+    logger.info("Reference entities seed step started")
+
+    sql_script = read_sql_file("normalized_seed_reference_entities.sql")
+    execute_sql_script(sql_script, step_name="seed_reference_entities")
+
+    logger.info("Reference entities seed step finished")
