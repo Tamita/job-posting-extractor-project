@@ -1,52 +1,42 @@
-WITH parsed_job_skills AS (
-    SELECT DISTINCT
-        lower(BTRIM(skill_value)) AS skill_name
-    FROM public.raw_jobs r,
-    LATERAL jsonb_array_elements_text(COALESCE(r.job_skills::jsonb, '[]'::jsonb)) AS skill_value
-    WHERE NULLIF(BTRIM(skill_value), '') IS NOT NULL
-),
-parsed_job_type_skills AS (
-    SELECT DISTINCT
-        lower(BTRIM(skill_value)) AS skill_name,
-        lower(BTRIM(skill_type_key)) AS skill_type_name
-    FROM public.raw_jobs r,
-    LATERAL jsonb_each(COALESCE(r.job_type_skills::jsonb, '{}'::jsonb)) AS typed_skills(skill_type_key, skill_array),
-    LATERAL jsonb_array_elements_text(skill_array) AS skill_value
-    WHERE NULLIF(BTRIM(skill_value), '') IS NOT NULL
-      AND NULLIF(BTRIM(skill_type_key), '') IS NOT NULL
-),
-all_skills AS (
-    SELECT skill_name
-    FROM parsed_job_skills
-    UNION
-    SELECT skill_name
-    FROM parsed_job_type_skills
-)
-INSERT INTO skills (skill_name)
-SELECT skill_name
-FROM all_skills
-ON CONFLICT (skill_name) DO NOTHING;
+-- 1. Insert skill types from job_type_skills keys
+INSERT INTO skill_types (skill_type_name)
+SELECT DISTINCT skill_type_name
+FROM (
+    SELECT lower(NULLIF(BTRIM(skill_type_key), '')) AS skill_type_name
+    FROM (
+        SELECT jsonb_object_keys(job_type_skills::jsonb) AS skill_type_key
+        FROM public.raw_jobs
+        WHERE job_type_skills IS NOT NULL
+    ) skill_type_keys
+) cleaned_skill_types
+WHERE skill_type_name IS NOT NULL
+ON CONFLICT (skill_type_name) DO NOTHING;
 
-WITH parsed_job_type_skills AS (
-    SELECT DISTINCT
-        lower(BTRIM(skill_value)) AS skill_name,
-        lower(BTRIM(skill_type_key)) AS skill_type_name
-    FROM public.raw_jobs r,
-    LATERAL jsonb_each(COALESCE(r.job_type_skills::jsonb, '{}'::jsonb)) AS typed_skills(skill_type_key, skill_array),
-    LATERAL jsonb_array_elements_text(skill_array) AS skill_value
-    WHERE NULLIF(BTRIM(skill_value), '') IS NOT NULL
-      AND NULLIF(BTRIM(skill_type_key), '') IS NOT NULL
-)
-INSERT INTO skill_type_skills (
-    skill_id,
-    skill_type_id
-)
+
+-- 2. Insert skills with their related skill_type_id
+INSERT INTO skills (skill_name, skill_type_id)
 SELECT DISTINCT
-    s.skill_id,
-    st.skill_type_id
-FROM parsed_job_type_skills pts
-JOIN skills s
-    ON s.skill_name = pts.skill_name
-JOIN skill_types st
-    ON st.skill_type_name = pts.skill_type_name
-ON CONFLICT (skill_id, skill_type_id) DO NOTHING;
+    cleaned_skills.skill_name,
+    skill_types.skill_type_id
+FROM (
+    SELECT
+        lower(NULLIF(BTRIM(skill_type_entry.key), '')) AS skill_type_name,
+        lower(NULLIF(BTRIM(skill_entry.value), '')) AS skill_name
+    FROM public.raw_jobs
+    CROSS JOIN LATERAL jsonb_each(
+        COALESCE(job_type_skills::jsonb, '{}'::jsonb)
+    ) AS skill_type_entry(key, value)
+    CROSS JOIN LATERAL jsonb_array_elements_text(
+        CASE
+            WHEN jsonb_typeof(skill_type_entry.value) = 'array'
+                THEN skill_type_entry.value
+            ELSE '[]'::jsonb
+        END
+    ) AS skill_entry(value)
+    WHERE job_type_skills IS NOT NULL
+) cleaned_skills
+INNER JOIN skill_types
+    ON skill_types.skill_type_name = cleaned_skills.skill_type_name
+WHERE cleaned_skills.skill_name IS NOT NULL
+  AND cleaned_skills.skill_type_name IS NOT NULL
+ON CONFLICT (skill_name) DO NOTHING;

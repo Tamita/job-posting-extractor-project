@@ -38,18 +38,13 @@ CREATE TABLE IF NOT EXISTS skill_types (
 
 CREATE TABLE IF NOT EXISTS skills (
     skill_id SERIAL PRIMARY KEY,
-    skill_name TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS skill_type_skills (
-    skill_type_skill_id SERIAL PRIMARY KEY,
-    skill_id INT NOT NULL REFERENCES skills(skill_id),
-    skill_type_id INT REFERENCES skill_types(skill_type_id),
-    CONSTRAINT uq_skill_type_skills UNIQUE (skill_id, skill_type_id)
+    skill_name TEXT NOT NULL UNIQUE,
+    skill_type_id INT NOT NULL REFERENCES skill_types(skill_type_id)
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
     job_id SERIAL PRIMARY KEY,
+    raw_job_id BIGINT UNIQUE,
     job_title_id INT REFERENCES job_titles(job_title_id),
     company_id INT REFERENCES companies(company_id),
     job_location_id INT REFERENCES locations(location_id),
@@ -66,8 +61,38 @@ CREATE TABLE IF NOT EXISTS jobs (
     job_health_insurance BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE IF NOT EXISTS job_skill_type_skills (
+CREATE TABLE IF NOT EXISTS job_skills (
     job_id INT NOT NULL REFERENCES jobs(job_id),
-    skill_type_skill_id INT NOT NULL REFERENCES skill_type_skills(skill_type_skill_id),
-    CONSTRAINT pk_job_skill_type_skills PRIMARY KEY (job_id, skill_type_skill_id)
+    skill_id INT NOT NULL REFERENCES skills(skill_id),
+    CONSTRAINT pk_job_skills PRIMARY KEY (job_id, skill_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_jobs_raw_job_id
+    ON jobs (raw_job_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_job_title_id
+    ON jobs (job_title_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_company_id
+    ON jobs (company_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_job_location_id
+    ON jobs (job_location_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_search_location_id
+    ON jobs (search_location_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_platform_id
+    ON jobs (platform_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_schedule_type_id
+    ON jobs (schedule_type_id);
+
+CREATE INDEX IF NOT EXISTS idx_jobs_salary_rate_id
+    ON jobs (salary_rate_id);
+
+CREATE INDEX IF NOT EXISTS idx_skills_skill_type_id
+    ON skills (skill_type_id);
+
+CREATE INDEX IF NOT EXISTS idx_job_skills_skill_id
+    ON job_skills (skill_id);

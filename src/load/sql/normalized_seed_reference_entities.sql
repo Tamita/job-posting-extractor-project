@@ -42,13 +42,3 @@ SELECT DISTINCT NULLIF(BTRIM(job_title_short), '')
 FROM public.raw_jobs
 WHERE NULLIF(BTRIM(job_title_short), '') IS NOT NULL
 ON CONFLICT (job_title_name) DO NOTHING;
-
-INSERT INTO skill_types (skill_type_name)
-SELECT DISTINCT lower(NULLIF(BTRIM(skill_type_name), ''))
-FROM (
-    SELECT jsonb_object_keys(job_type_skills::jsonb) AS skill_type_name
-    FROM public.raw_jobs
-    WHERE job_type_skills IS NOT NULL
-) skill_type_keys
-WHERE NULLIF(BTRIM(skill_type_name), '') IS NOT NULL
-ON CONFLICT (skill_type_name) DO NOTHING;

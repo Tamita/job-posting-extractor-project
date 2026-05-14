@@ -1,6 +1,6 @@
 import logging
-from time import perf_counter
 from pathlib import Path
+from time import perf_counter
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -159,4 +159,12 @@ def seed_jobs() -> None:
         sql_file_name="normalized_seed_jobs.sql",
         step_name="seed_jobs",
         log_label="Jobs seed",
+    )
+
+
+def seed_job_skills() -> None:
+    _run_seed_step(
+        sql_file_name="normalized_seed_job_skills.sql",
+        step_name="seed_job_skills",
+        log_label="Job skills seed",
     )

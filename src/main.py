@@ -12,6 +12,7 @@ from src.load.normalization_loader import (
     seed_locations,
     seed_skills,
     seed_jobs,
+    seed_job_skills,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ def main() -> None:
     seed_locations()
     seed_skills()
     seed_jobs()
+    seed_job_skills()
 
     logger.info("Jobs ETL pipeline completed successfully")
 
