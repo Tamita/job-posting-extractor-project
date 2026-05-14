@@ -9,6 +9,20 @@ from src.load.db_connector import create_postgres_engine
 logger = logging.getLogger(__name__)
 
 
+def prepare_dataframe_for_postgres_load(df: pd.DataFrame) -> pd.DataFrame:
+    prepared_df = df.copy()
+
+    prepared_df.insert(0, "raw_job_id", range(1, len(prepared_df) + 1))
+
+    if "job_posted_date" in prepared_df.columns:
+        prepared_df["job_posted_date"] = pd.to_datetime(
+            prepared_df["job_posted_date"],
+            errors="coerce",
+        )
+
+    return prepared_df
+
+
 def load_jobs_to_postgres(df: pd.DataFrame) -> None:
     logger.info(
         "Starting PostgreSQL load for table '%s.%s'",
@@ -17,9 +31,10 @@ def load_jobs_to_postgres(df: pd.DataFrame) -> None:
     )
 
     try:
+        prepared_df = prepare_dataframe_for_postgres_load(df)
         engine = create_postgres_engine()
 
-        df.to_sql(
+        prepared_df.to_sql(
             name=POSTGRES_TABLE,
             con=engine,
             schema=POSTGRES_SCHEMA,
