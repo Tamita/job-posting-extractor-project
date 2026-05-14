@@ -1,3 +1,5 @@
+"""Load and execute SQL files that define and seed the normalized schema."""
+
 import logging
 from pathlib import Path
 from time import perf_counter
@@ -13,10 +15,21 @@ SQL_DIR = Path(__file__).resolve().parent / "sql"
 
 
 class NormalizationExecutionError(Exception):
-    """Raised when normalization SQL execution fails."""
+    """Raised when reading or executing normalization SQL fails."""
 
 
 def read_sql_file(file_name: str) -> str:
+    """Read a UTF-8 SQL file from ``src/load/sql``.
+
+    Args:
+        file_name: File name only (e.g. ``normalized_schema.sql``).
+
+    Returns:
+        Full file contents.
+
+    Raises:
+        NormalizationExecutionError: If the file is missing or cannot be read.
+    """
     sql_file_path = SQL_DIR / file_name
 
     logger.info("Reading normalization SQL file '%s'", sql_file_path)
@@ -36,6 +49,20 @@ def read_sql_file(file_name: str) -> str:
 
 
 def execute_sql_script(sql_script: str, *, step_name: str) -> None:
+    """Run a SQL script as one or more statements inside a single transaction.
+
+    Statements are split on semicolons (see ``split_sql_statements``). Each
+    fragment is executed in order using ``engine.begin()`` so the step commits
+    or rolls back atomically.
+
+    Args:
+        sql_script: Full SQL text, typically from ``read_sql_file``.
+        step_name: Logical name for logging and error messages.
+
+    Raises:
+        ValueError: If ``sql_script`` is empty or yields no executable statements.
+        NormalizationExecutionError: On SQLAlchemy execution errors.
+    """
     if not sql_script.strip():
         raise ValueError(f"SQL script for step '{step_name}' cannot be empty")
 
@@ -92,6 +119,7 @@ def execute_sql_script(sql_script: str, *, step_name: str) -> None:
 
 
 def create_normalized_schema() -> None:
+    """Create normalized tables and indexes from ``normalized_schema.sql``."""
     logger.info("Normalized schema creation step started")
 
     sql_script = read_sql_file("normalized_schema.sql")
@@ -101,6 +129,7 @@ def create_normalized_schema() -> None:
 
 
 def seed_reference_entities() -> None:
+    """Seed lookup tables (companies, platforms, job titles, etc.) from raw jobs."""
     logger.info("Reference entities seed step started")
 
     sql_script = read_sql_file("normalized_seed_reference_entities.sql")
@@ -110,6 +139,18 @@ def seed_reference_entities() -> None:
 
 
 def split_sql_statements(sql_script: str) -> list[str]:
+    """Split ``sql_script`` on ``;`` into non-empty, semicolon-terminated fragments.
+
+    Note:
+        Semicolons inside string literals are not handled; keep scripts simple or
+        avoid embedded semicolons in strings.
+
+    Args:
+        sql_script: Full SQL file contents.
+
+    Returns:
+        List of SQL strings, each ending with ``;``.
+    """
     statements = [
         statement.strip() for statement in sql_script.split(";") if statement.strip()
     ]
@@ -117,6 +158,7 @@ def split_sql_statements(sql_script: str) -> list[str]:
 
 
 def shorten_sql_for_log(sql_statement: str, max_length: int = 160) -> str:
+    """Collapse whitespace and truncate ``sql_statement`` for safe log lines."""
     single_line = " ".join(sql_statement.split())
     if len(single_line) <= max_length:
         return single_line
@@ -124,6 +166,11 @@ def shorten_sql_for_log(sql_statement: str, max_length: int = 160) -> str:
 
 
 def _run_seed_step(*, sql_file_name: str, step_name: str, log_label: str) -> None:
+    """Load ``sql_file_name`` and execute it, wrapping failures consistently.
+
+    Raises:
+        NormalizationExecutionError: On read, validation, or SQL execution errors.
+    """
     logger.info("%s step started", log_label)
 
     try:
@@ -139,6 +186,7 @@ def _run_seed_step(*, sql_file_name: str, step_name: str, log_label: str) -> Non
 
 
 def seed_locations() -> None:
+    """Populate normalized location rows from distinct raw job locations."""
     _run_seed_step(
         sql_file_name="normalized_seed_locations.sql",
         step_name="seed_locations",
@@ -147,6 +195,7 @@ def seed_locations() -> None:
 
 
 def seed_skills() -> None:
+    """Insert skills and types derived from raw ``job_skills`` / ``job_type_skills``."""
     _run_seed_step(
         sql_file_name="normalized_seed_skills.sql",
         step_name="seed_skills",
@@ -155,6 +204,7 @@ def seed_skills() -> None:
 
 
 def seed_jobs() -> None:
+    """Insert normalized ``jobs`` rows joined to reference and location tables."""
     _run_seed_step(
         sql_file_name="normalized_seed_jobs.sql",
         step_name="seed_jobs",
@@ -163,6 +213,7 @@ def seed_jobs() -> None:
 
 
 def seed_job_skills() -> None:
+    """Populate ``job_skills`` links from raw JSON skill arrays and ``skills``."""
     _run_seed_step(
         sql_file_name="normalized_seed_job_skills.sql",
         step_name="seed_job_skills",

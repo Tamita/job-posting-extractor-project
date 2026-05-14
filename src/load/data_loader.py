@@ -10,6 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 def prepare_dataframe_for_postgres_load(df: pd.DataFrame) -> pd.DataFrame:
+    """Return a copy of ``df`` ready for bulk load into the raw staging table.
+
+    Inserts a monotonic ``raw_job_id`` column (1..n). Coerces ``job_posted_date``
+    to datetimes when that column exists.
+
+    Args:
+        df: Validated jobs dataframe.
+
+    Returns:
+        Dataframe including ``raw_job_id`` and typed dates where applicable.
+    """
     prepared_df = df.copy()
 
     prepared_df.insert(0, "raw_job_id", range(1, len(prepared_df) + 1))
@@ -24,6 +35,17 @@ def prepare_dataframe_for_postgres_load(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_jobs_to_postgres(df: pd.DataFrame) -> None:
+    """Replace the configured raw PostgreSQL table with ``df``.
+
+    Uses ``if_exists='replace'`` and maps nested columns to SQLAlchemy ``JSON``
+    where configured. Schema and table names come from settings.
+
+    Args:
+        df: Validated dataframe after parsing and Pandera checks.
+
+    Raises:
+        Exception: Database or pandas ``to_sql`` errors are logged and re-raised.
+    """
     logger.info(
         "Starting PostgreSQL load for table '%s.%s'",
         POSTGRES_SCHEMA,
