@@ -9,6 +9,17 @@ logger = logging.getLogger(__name__)
 
 
 def read_raw_jobs_csv(file_path: Path = RAW_JOBS_FILE) -> pd.DataFrame:
+    """Load the raw jobs dataset from CSV into a pandas DataFrame.
+
+    Args:
+        file_path: Path to the CSV file. Defaults to ``RAW_JOBS_FILE`` from settings.
+
+    Returns:
+        DataFrame with one row per job posting.
+
+    Raises:
+        Exception: Any error from ``pandas.read_csv`` is logged and re-raised.
+    """
     logger.info("Starting CSV read from %s", file_path)
 
     try:

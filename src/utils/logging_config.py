@@ -3,6 +3,11 @@ from pathlib import Path
 
 
 def setup_logging() -> None:
+    """Configure root logging to INFO on stderr and ``logs/pipeline.log``.
+
+    If handlers are already attached to the root logger, does nothing (avoids
+    duplicate logs when ``setup_logging`` is called more than once).
+    """
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
 

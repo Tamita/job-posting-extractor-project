@@ -1,3 +1,5 @@
+"""Runtime configuration: paths, CSV location, and PostgreSQL settings from ``.env``."""
+
 from pathlib import Path
 import os
 
@@ -16,6 +18,6 @@ POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
 POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5432"))
 POSTGRES_DB = os.getenv("POSTGRES_DB", "job_postings")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_SCHEMA = os.getenv("POSTGRES_SCHEMA", "public")
 POSTGRES_TABLE = os.getenv("POSTGRES_TABLE", "raw_jobs")

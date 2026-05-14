@@ -19,6 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    """Run the full jobs ETL pipeline.
+
+    Ensures PostgreSQL is ready, ingests and validates CSV data, loads the raw
+    staging table, then applies normalized schema DDL and seed scripts. Requires
+    a reachable database and a valid `.env` (loaded via ``src.config.settings``).
+    """
     setup_logging()
     logger.info("Starting jobs ETL pipeline")
 

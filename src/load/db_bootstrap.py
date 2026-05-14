@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 def ensure_database_exists() -> None:
+    """Create ``POSTGRES_DB`` if it does not already exist.
+
+    Connects to the maintenance database ``postgres`` with ``autocommit=True``,
+    checks ``pg_database``, and issues ``CREATE DATABASE`` when needed.
+    """
     logger.info("Checking if PostgreSQL database '%s' exists", POSTGRES_DB)
 
     conn = psycopg.connect(

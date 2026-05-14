@@ -1,12 +1,17 @@
+"""Pandera schema and helpers for validating parsed raw job dataframes."""
+
+import pandas as pd
 import pandera.pandas as pa
 from pandera import Check
 
 
 def is_list_value(value: object) -> bool:
+    """Return True if ``value`` is a Python ``list`` (used by Pandera column checks)."""
     return isinstance(value, list)
 
 
 def is_dict_value(value: object) -> bool:
+    """Return True if ``value`` is a Python ``dict`` (used by Pandera column checks)."""
     return isinstance(value, dict)
 
 
@@ -37,5 +42,16 @@ raw_jobs_schema = pa.DataFrameSchema(
 )
 
 
-def validate_raw_jobs_dataframe(df):
+def validate_raw_jobs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Validate ``df`` against ``raw_jobs_schema``.
+
+    Args:
+        df: Parsed jobs dataframe (see ``parse_semi_structured_columns``).
+
+    Returns:
+        The validated dataframe (same data when validation succeeds).
+
+    Raises:
+        pandera.errors.SchemaErrors: When required columns or checks fail.
+    """
     return raw_jobs_schema.validate(df)
